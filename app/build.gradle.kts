@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp) // for Room if you prefer KSP instead of KAPT
     kotlin("kapt")          // if you choose to use KAPT
     id("com.google.dagger.hilt.android")  // Hilt
 }
