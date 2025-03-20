@@ -10,13 +10,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.fairshare.data.Bucket
 import com.example.fairshare.data.Task
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.runtime.getValue
+import androidx.compose.foundation.lazy.LazyRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
-    // Collect the list of buckets from the ViewModel
-    val buckets = viewModel.buckets.collectAsState().value
+    // Observe buckets from ViewModel
+    val buckets by viewModel.buckets.collectAsState()
 
     // Scaffold provides basic material design layout structure
     Scaffold(
@@ -24,24 +25,33 @@ fun MainScreen(viewModel: MainViewModel) {
             TopAppBar(
                 title = { Text("FairShare") }
             )
-        },
-        content = { paddingValues ->
-            LazyColumn(
-                contentPadding = paddingValues,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(buckets) { bucket ->
-                    BucketItem(bucket = bucket, viewModel = viewModel)
+        }
+    ) { paddingValues ->
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+            .padding(16.dp)
+        ) {
+            if (buckets.isEmpty()) {
+                Text("No buckets found. Add one!", style = MaterialTheme.typography.bodyLarge)
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(buckets) { bucket ->
+                        BucketItem(bucket = bucket, viewModel = viewModel)
+                    }
                 }
             }
         }
-    )
+    }
 }
 
 @Composable
 fun BucketItem(bucket: Bucket, viewModel: MainViewModel) {
-    // Collect the list of tasks for the given bucket
-    val tasks = viewModel.getTasks(bucket.bucketId).collectAsState().value
+    // Observe tasks from ViewModel
+    val tasks by viewModel.getTasks(bucket.bucketId).collectAsState()
 
     Column(
         modifier = Modifier
@@ -53,8 +63,18 @@ fun BucketItem(bucket: Bucket, viewModel: MainViewModel) {
             style = MaterialTheme.typography.titleLarge
         )
         Spacer(modifier = Modifier.height(4.dp))
-        tasks.forEach { task ->
-            TaskItem(task = task)
+
+        if (tasks.isEmpty()) {
+            Text("No tasks in this bucket.", style = MaterialTheme.typography.bodyMedium)
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                items(tasks) { task ->
+                    TaskItem(task = task)
+                }
+            }
         }
     }
 }
@@ -62,7 +82,7 @@ fun BucketItem(bucket: Bucket, viewModel: MainViewModel) {
 @Composable
 fun TaskItem(task: Task) {
     Text(
-        text = task.description,
+        text = "- ${task.description}",
         style = MaterialTheme.typography.bodyLarge,
         modifier = Modifier.padding(start = 16.dp)
     )
