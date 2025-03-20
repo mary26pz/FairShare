@@ -92,4 +92,7 @@ dependencies {
 // Allow references to generated code (kapt or ksp)
 kapt {
     correctErrorTypes = true
+    arguments {
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
 }
