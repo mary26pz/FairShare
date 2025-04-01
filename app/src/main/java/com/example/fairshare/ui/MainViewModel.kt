@@ -3,16 +3,14 @@ package com.example.fairshare.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fairshare.data.Bucket
-import com.example.fairshare.data.dao.BucketDao
 import com.example.fairshare.data.Task
+import com.example.fairshare.data.dao.BucketDao
 import com.example.fairshare.data.TaskDao
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -20,41 +18,96 @@ class MainViewModel @Inject constructor(
     private val taskDao: TaskDao
 ) : ViewModel() {
 
-    // ✅ Fetches all buckets and sorts by createdAt (or bucketId as fallback)
-    val buckets = bucketDao.getAll().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    // ✅ Toggle sample data (Set to false for real DB)
+    private val useSampleData = true
 
-    // ✅ Fetches tasks for a specific bucket
-    fun getTasks(bucketId: Int) = taskDao.getTasksForBucket(bucketId).stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    // ✅ Flow to hold bucket list
+    private val _buckets = MutableStateFlow<List<Bucket>>(emptyList())
+    val buckets: StateFlow<List<Bucket>> = _buckets
 
-    // ✅ Ensures database is prepopulated with a default bucket if empty
     init {
-        viewModelScope.launch(Dispatchers.IO) {
-            val existingBuckets = bucketDao.getAll().first()
-            if (existingBuckets.isEmpty()) {
-                bucketDao.insert(Bucket(name = "Default Bucket"))
+        if (useSampleData) {
+            // ✅ Using Hardcoded Sample Data
+            _buckets.value = listOf(
+                Bucket(bucketId = 1, name = "Work"),
+                Bucket(bucketId = 2, name = "Groceries")
+            )
+        } else {
+            // ✅ Fetch Buckets from Database
+            viewModelScope.launch(Dispatchers.IO) {
+                bucketDao.getAll().collect { bucketList ->
+                    _buckets.value = bucketList
+                }
             }
         }
     }
 
-    // ✅ Inserts a new bucket safely
-    fun addBucket(name: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            bucketDao.insert(Bucket(name = name))
+    // ✅ Fetches tasks for a specific bucket
+    fun getTasks(bucketId: Int): StateFlow<List<Task>> {
+        return if (useSampleData) {
+            val sampleTasks = mapOf(
+                1 to listOf(
+                    Task(taskId = 1, bucketOwnerId = 1, description = "Finish project"),
+                    Task(taskId = 2, bucketOwnerId = 1, description = "Send email update"),
+                    Task(taskId = 3, bucketOwnerId = 1, description = "Submit Hours")
+            ),
+                2 to listOf(
+                    Task(taskId = 3, bucketOwnerId = 2, description = "Buy apples"),
+                    Task(taskId = 4, bucketOwnerId = 2, description = "Get milk")
+                )
+            )
+            MutableStateFlow(sampleTasks[bucketId] ?: emptyList())
+        } else {
+            taskDao.getTasksForBucket(bucketId).stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
         }
     }
 
-    // ✅ Inserts a task linked to a bucket
+    // ✅ Ensures database is prepopulated if empty (only for real DB)
+    init {
+        if (!useSampleData) {
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    val existingBuckets = bucketDao.getAll().firstOrNull()
+                    if (existingBuckets.isNullOrEmpty()) {
+                        bucketDao.insert(Bucket(name = "Default Bucket"))
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace() // Prevent crash & log error
+                }
+            }
+        }
+    }
+
+    // ✅ Inserts a new bucket safely (only for real DB)
+    fun addBucket(name: String) {
+        if (!useSampleData) {
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    bucketDao.insert(Bucket(name = name))
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        } else {
+            // ✅ Add sample bucket in-memory
+            _buckets.value = _buckets.value + Bucket(bucketId = _buckets.value.size + 1, name = name)
+        }
+    }
+
+    // ✅ Inserts a task linked to a bucket (only for real DB)
     fun addTask(bucketId: Int, description: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            taskDao.insert(Task(bucketOwnerId = bucketId, description = description))
+        if (!useSampleData) {
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    taskDao.insert(Task(bucketOwnerId = bucketId, description = description))
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
         }
     }
 }
