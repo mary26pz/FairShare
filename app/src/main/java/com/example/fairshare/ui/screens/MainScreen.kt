@@ -4,9 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.fairshare.data.Bucket
@@ -51,14 +49,20 @@ fun MainScreen(viewModel: MainViewModel) {
 fun BucketItem(bucket: Bucket, viewModel: MainViewModel) {
     val tasks by viewModel.getTasks(bucket.bucketId).collectAsState()
 
-    // Just a Column — no vertical scroll
-    Column(modifier = Modifier.fillMaxWidth()) {
+    var newTaskDescription by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        // Bucket Name
         Text(
             text = bucket.name,
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(8.dp)
+            style = MaterialTheme.typography.titleLarge
         )
 
+        // Existing Tasks
         if (tasks.isEmpty()) {
             Text(
                 text = "No tasks in this bucket.",
@@ -71,6 +75,49 @@ fun BucketItem(bucket: Bucket, viewModel: MainViewModel) {
                 TaskItem(task = task)
             }
         }
+
+        // Now we use our extracted composable for the row that adds a new task
+        AddNewTaskRow(
+            newTaskDescription = newTaskDescription,
+            onTaskDescriptionChange = { newTaskDescription = it },
+            onAddTaskClicked = {
+                if (newTaskDescription.isNotBlank()) {
+                    viewModel.addTask(bucket.bucketId, newTaskDescription.trim())
+                    newTaskDescription = ""
+                }
+            }
+        )
+    }
+}
+
+/**
+ * A reusable composable that shows a Spacer, then a row containing:
+ *  - an OutlinedTextField to input new tasks
+ *  - a Button to add the task
+ */
+@Composable
+fun AddNewTaskRow(
+    newTaskDescription: String,
+    onTaskDescriptionChange: (String) -> Unit,
+    onAddTaskClicked: () -> Unit
+) {
+    // Spacer before the row
+    Spacer(modifier = Modifier.height(8.dp))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        OutlinedTextField(
+            value = newTaskDescription,
+            onValueChange = onTaskDescriptionChange,
+            label = { Text("New Task") },
+            modifier = Modifier.weight(1f)
+        )
+
+        Button(onClick = onAddTaskClicked) {
+            Text("Add")
+        }
     }
 }
 
@@ -82,4 +129,3 @@ fun TaskItem(task: Task) {
         modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
     )
 }
-
