@@ -29,13 +29,13 @@ class MainViewModel @Inject constructor(
     private val _sampleTasks = MutableStateFlow(
         mapOf(
             1 to listOf(
-                Task(taskId = 1, bucketOwnerId = 1, description = "Finish project"),
-                Task(taskId = 2, bucketOwnerId = 1, description = "Send email update"),
-                Task(taskId = 3, bucketOwnerId = 1, description = "Submit Hours")
+                Task(taskId = 1, bucketOwnerId = 1, description = "Fed Alice"),
+                Task(taskId = 2, bucketOwnerId = 1, description = "Took out trash"),
+                Task(taskId = 3, bucketOwnerId = 1, description = "Changed toilet paper")
             ),
             2 to listOf(
-                Task(taskId = 4, bucketOwnerId = 2, description = "Buy apples"),
-                Task(taskId = 5, bucketOwnerId = 2, description = "Get milk")
+                Task(taskId = 4, bucketOwnerId = 2, description = "Cleaned dishes"),
+                Task(taskId = 5, bucketOwnerId = 2, description = "Changed Bounty")
             )
         )
     )
@@ -44,8 +44,8 @@ class MainViewModel @Inject constructor(
         if (useSampleData) {
             // Sample Buckets
             _buckets.value = listOf(
-                Bucket(bucketId = 1, name = "Work"),
-                Bucket(bucketId = 2, name = "Groceries")
+                Bucket(bucketId = 1, name = "Alexis"),
+                Bucket(bucketId = 2, name = "Mary")
             )
         } else {
             // Real DB: observe all buckets
@@ -138,6 +138,29 @@ class MainViewModel @Inject constructor(
             updatedMap[bucketId] = currentTasks + newTask
             _sampleTasks.value = updatedMap
         }
+    }
+
+    /**
+     * Removes a task from a given bucket (sample mode).
+     * If real DB, you'd need a delete query in TaskDao (commented out below).
+     */
+    fun removeTask(bucketId: Int, taskId: Int) {
+        if (!useSampleData) {
+            // For real DB usage, you'd do something like:
+            // viewModelScope.launch(Dispatchers.IO) {
+            //     taskDao.deleteTaskById(taskId)
+            // }
+            return
+        }
+
+        // Sample mode: remove task from our in-memory map
+        val currentMap = _sampleTasks.value
+        val currentTasks = currentMap[bucketId].orEmpty()
+        val updatedTasks = currentTasks.filterNot { it.taskId == taskId }
+
+        val updatedMap = currentMap.toMutableMap()
+        updatedMap[bucketId] = updatedTasks
+        _sampleTasks.value = updatedMap
     }
 
     // Init block to ensure DB is prepopulated if empty (only for real DB)

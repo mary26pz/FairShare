@@ -9,6 +9,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.fairshare.data.Bucket
 import com.example.fairshare.data.Task
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,11 +76,16 @@ fun BucketItem(bucket: Bucket, viewModel: MainViewModel) {
         } else {
             // Simple column for tasks; not another LazyColumn
             tasks.forEach { task ->
-                TaskItem(task = task)
+                TaskItem(
+                    task = task,
+                    onDeleteClicked = {
+                        viewModel.removeTask(bucket.bucketId, task.taskId)
+                    }
+                )
             }
         }
 
-        // Now we use our extracted composable for the row that adds a new task
+        // A row to add a new task
         AddNewTaskRow(
             newTaskDescription = newTaskDescription,
             onTaskDescriptionChange = { newTaskDescription = it },
@@ -121,11 +130,35 @@ fun AddNewTaskRow(
     }
 }
 
+/**
+ * Shows a single task with a delete “X” on the right
+ */
 @Composable
-fun TaskItem(task: Task) {
-    Text(
-        text = "- ${task.description}",
-        style = MaterialTheme.typography.bodyLarge,
-        modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
-    )
+fun TaskItem(
+    task: Task,
+    onDeleteClicked: () -> Unit  // <-- Add this parameter
+) {
+    // A Row so we can place the task text on the left and the "X" button on the right
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        // Existing text
+        Text(
+            text = "- ${task.description}",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(start = 16.dp)
+        )
+
+        // "X" icon for deleting this task
+        IconButton(onClick = onDeleteClicked) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Delete Task"
+            )
+        }
+    }
 }
+
