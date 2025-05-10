@@ -4,29 +4,26 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     kotlin("kapt")          // if you choose to use KAPT
     id("com.google.dagger.hilt.android")  // Hilt
+    id("com.google.gms.google-services")  // <-- Apply the Firebase plugin here
 }
 
 android {
-    namespace = "com.example.fairshare"
-    compileSdk = 35
+    namespace = "com.marielenaperez.fairshare"  // <-- Add the namespace here
 
+    compileSdk = 34
     defaultConfig {
-        applicationId = "com.example.fairshare"
-        minSdk = 24
-        targetSdk = 35
+        applicationId = "com.marielenaperez.fairshare"  // Your app's package name
+        minSdk = 21
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
-        release {
+        getByName("release") {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 
@@ -59,6 +56,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.play.services.measurement.api)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -67,6 +65,12 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // Firebase BoM (Bill of Materials)
+    implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
+
+    // Add Firebase Analytics (or any other Firebase SDKs you want to use)
+    implementation("com.google.firebase:firebase-analytics")
 
     // --- Add these NEW dependencies below ---
     val roomVersion = "2.6.1"
