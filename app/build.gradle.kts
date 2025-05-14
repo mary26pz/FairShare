@@ -13,7 +13,7 @@ android {
     compileSdk = 34
     defaultConfig {
         applicationId = "com.marielenaperez.fairshare"  // Your app's package name
-        minSdk = 21
+        minSdk = 23
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.play.services.measurement.api)
+    implementation(libs.firebase.auth.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -68,6 +69,11 @@ dependencies {
 
     // Firebase BoM (Bill of Materials)
     implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
+
+    // Firebase Firestore dependency (version is managed by BoM)
+    implementation("com.google.firebase:firebase-firestore-ktx")
+
+    implementation("com.google.firebase:firebase-auth-ktx")
 
     // Add Firebase Analytics (or any other Firebase SDKs you want to use)
     implementation("com.google.firebase:firebase-analytics")
