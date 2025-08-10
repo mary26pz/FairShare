@@ -12,17 +12,31 @@ import com.marielenaperez.fairshare.data.Task
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
     val buckets by viewModel.buckets.collectAsState()
+    var newBucketName by remember { mutableStateOf("") } // State to hold the new bucket name
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("FairShare") }
+                title = { Text("FairShare") },
+                actions = {
+                    // Example action to add a new bucket
+                    IconButton(onClick = {
+                        if (newBucketName.isNotBlank()) {
+                            // Add the bucket only if the name is not blank
+                            viewModel.addBucket(newBucketName)
+                            newBucketName = "" // Clear the input field after adding
+                        }
+                    }) {
+                        Icon(Icons.Filled.Add, contentDescription = "Add New Bucket")
+                    }
+                }
             )
         }
     ) { paddingValues ->
@@ -45,13 +59,23 @@ fun MainScreen(viewModel: MainViewModel) {
                     BucketItem(bucket = bucket, viewModel = viewModel)
                 }
             }
+
+            // Add the input field for the new bucket name
+            item {
+                OutlinedTextField(
+                    value = newBucketName,
+                    onValueChange = { newBucketName = it }, // Update the bucket name as the user types
+                    label = { Text("New Bucket Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }
 
 @Composable
 fun BucketItem(bucket: Bucket, viewModel: MainViewModel) {
-    val tasks by viewModel.getTasks(bucket.bucketId).collectAsState()
+    val tasks by viewModel.getTasks(bucket.bucketId.toString()).collectAsState()
 
     var newTaskDescription by remember { mutableStateOf("") }
 
@@ -79,7 +103,7 @@ fun BucketItem(bucket: Bucket, viewModel: MainViewModel) {
                 TaskItem(
                     task = task,
                     onDeleteClicked = {
-                        viewModel.removeTask(bucket.bucketId, task.taskId)
+                        viewModel.removeTask(bucket.bucketId.toString(), task.taskId.toString())
                     }
                 )
             }

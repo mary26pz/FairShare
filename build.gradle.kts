@@ -6,7 +6,8 @@ buildscript {
     }
     dependencies {
         // Ensure that the Google services plugin classpath is included here
-        classpath("com.google.gms:google-services:4.4.2")
+        classpath("com.google.gms:google-services:4.4.2")  // Firebase plugin
+        classpath("com.google.dagger:hilt-android-gradle-plugin:2.51.1")  // Hilt Gradle plugin
     }
 }
 
