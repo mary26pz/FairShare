@@ -50,8 +50,10 @@ class MainActivity : ComponentActivity() {
                 if (task.isSuccessful) {
                     Log.d("FirebaseAuth", "signInWithEmail:success")
                     val user = auth.currentUser
-                    // Now you can proceed with saving data to Firestore
-                    saveDataToFirestore()
+                    // Proceed with Firestore operation
+                    user?.let {
+                        saveDataToFirestore(it.uid)
+                    }
                 } else {
                     Log.w("FirebaseAuth", "signInWithEmail:failure", task.exception)
                     // Handle sign-in failure (e.g., show error message)
@@ -59,29 +61,23 @@ class MainActivity : ComponentActivity() {
             }
     }
 
-    private fun saveDataToFirestore() {
+    // Function to save data to Firestore
+    private fun saveDataToFirestore(userId: String) {
         val user = hashMapOf(
             "first_name" to "John",
             "last_name" to "Doe",
             "age" to 29
         )
 
-        // Ensure the user is authenticated before saving data
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        if (currentUser != null) {
-            // User is authenticated, save data to Firestore
-            db.collection("users")
-                .document(currentUser.uid)  // Use the user's UID as the document ID
-                .set(user)  // Use `set()` instead of `add()`
-                .addOnSuccessListener {
-                    Log.d("FirebaseFirestore", "DocumentSnapshot successfully written!")
-                }
-                .addOnFailureListener { e ->
-                    Log.w("FirebaseFirestore", "Error adding document", e)
-                }
-        } else {
-            Log.w("FirebaseAuth", "User is not authenticated")
-            // Handle the case where the user is not authenticated
-        }
+        // Save data to Firestore with the authenticated user's UID
+        db.collection("users")
+            .document(userId)  // Use the user's UID as the document ID
+            .set(user)  // Use `set()` instead of `add()`
+            .addOnSuccessListener {
+                Log.d("FirebaseFirestore", "DocumentSnapshot successfully written!")
+            }
+            .addOnFailureListener { e ->
+                Log.w("FirebaseFirestore", "Error adding document", e)
+            }
     }
 }
